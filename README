@@ -23,4 +23,4 @@ bitbake core-image-minimal
 cd <build-dir>/tmp/deploy/images/qemuarma9/
 
 3. call script 
-./qemu-run.sh
+./qemu-run.sh 
