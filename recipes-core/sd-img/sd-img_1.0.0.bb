@@ -32,7 +32,7 @@ do_create_sdimg() {
 	sleep 20
 
 	if [ -f "${DEPLOY_DIR}/images/${MACHINE}/core-image-minimal-qemuarma9.wic" ];then
-		cd ${S}
+		cd ${WORKDIR}
 
 		#delete sd.img if exist
 		if [ -f "${DEPLOY_DIR}/images/${MACHINE}/sd.img" ];then
