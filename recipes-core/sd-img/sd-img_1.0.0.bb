@@ -31,7 +31,7 @@ do_create_sdimg() {
 	#wait little bit before core-image-minimal-qemuarma9.wic was created
 	sleep 20
 
-	if [ -f "${DEPLOY_DIR}/images/${MACHINE}/core-image-minimal-qemuarma9.wic" ];then
+	if [ -f "${DEPLOY_DIR}/images/${MACHINE}/core-image-minimal-${MACHINE}.wic" ];then
 		cd ${WORKDIR}
 
 		#delete sd.img if exist
@@ -40,7 +40,6 @@ do_create_sdimg() {
 			rm -f ${DEPLOY_DIR}/images/${MACHINE}/sd.img
 		fi
 
-		bbplain "File exists : ${DEPLOY_DIR}/images/${MACHINE}/core-image-minimal-qemuarma9.wic"
 		
 		result="$(./sdcard_img.sh "${DEPLOY_DIR}/images/${MACHINE}")"
 		bbplain "RESULT :\n${result}"
