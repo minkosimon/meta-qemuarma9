@@ -34,13 +34,13 @@ fi
 
 
 echo "$0 : Creating empty sd.img file"
-dd if=/dev/zero of=sd.img bs=1M count=1000
+dd if=/dev/zero of=sd.img bs=1M count=2000
 echo "$0 : Copying content from wic file"
 dd if=core-image-minimal-qemuarma9.wic of=sd.img conv=notrunc
 
+echo "Resize rootfs partition to take the whole sd.img size"
+parted -s sd.img resizepart 2 100%
 exit 0
-#echo "Resize rootfs partition to take the whole sd.img size"
-#parted -s sd.img resizepart 2 100%
 
 
 

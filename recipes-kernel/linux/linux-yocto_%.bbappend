@@ -1,3 +1,8 @@
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+SRC_URI += "file://rauc.cfg"
+
+CMDLINE_remove = "root=/dev/mmcblk0p2"
+
 # WR qemuarma9 configuration, not supported in Yocto
 KBRANCH_qemuarma9 ?= "v5.4/standard/arm-versatile-926ejs"
 KMACHINE_qemuarma9 ?= "qemuarma9"
