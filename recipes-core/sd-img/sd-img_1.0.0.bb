@@ -9,7 +9,8 @@ inherit deploy
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-SRC_URI = "file://sdcard_img.sh"
+SRC_URI += "file://sdcard_img.sh"
+SRC_URI += "file://launch-qemu.sh"
 
 
 S = "${WORKDIR}/${PN}"
@@ -36,13 +37,13 @@ do_create_sdimg() {
 
 		#delete sd.img if exist
 		if [ -f "${DEPLOY_DIR}/images/${MACHINE}/sd.img" ];then
-			bbplain "delete  ${DEPLOY_DIR}/images/${MACHINE}/sd.img"
+			bbplain "[ INFO ] : delete  ${DEPLOY_DIR}/images/${MACHINE}/sd.img"
 			rm -f ${DEPLOY_DIR}/images/${MACHINE}/sd.img
 		fi
 
 		
 		result="$(./sdcard_img.sh "${DEPLOY_DIR}/images/${MACHINE}")"
-		bbplain "RESULT :\n${result}"
+		bbplain "[ INFO ] : RESULT :\n${result}"
 	else
 		bbplain "WIC FILES WAS NOT YET BUILDED"
 		#bbplain "CONTAINS: ${DEPLOY_DIR}/images/${MACHINE} "
@@ -54,10 +55,14 @@ do_create_sdimg() {
 		rm -f ${DEPLOY_DIR}/images/${MACHINE}/qemu-run.sh
 	fi
 
-	#create a script to run qemu-arm
-	echo "#!/bin/sh" > ${DEPLOY_DIR}/images/${MACHINE}/qemu-run.sh
-	echo "qemu-system-arm -M vexpress-a9 -m 512 -kernel u-boot.elf -nographic -sd sd.img" >> ${DEPLOY_DIR}/images/${MACHINE}/qemu-run.sh
-	chmod +x ${DEPLOY_DIR}/images/${MACHINE}/qemu-run.sh
+	#create copy script to deploydir
+	if [ ! -f ${DEPLOY_DIR}/images/${MACHINE}/launch-qemu.sh ];then 
+		bbplain "[ INFO ] : Copy script launch-qemu.sh to ${DEPLOY_DIR}/images/${MACHINE}/"
+		cp launch-qemu.sh ${DEPLOY_DIR}/images/${MACHINE}/
+	else
+		bbplain "[ INFO ] : script ${DEPLOY_DIR}/images/${MACHINE}/launch-qemu.sh is available "
+	fi
+	
 }
 
 do_clean() {

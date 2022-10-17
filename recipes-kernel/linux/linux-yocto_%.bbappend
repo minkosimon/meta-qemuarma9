@@ -1,5 +1,6 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 SRC_URI += "file://rauc.cfg"
+SRC_URI += "file://graphics.cfg"
 
 CMDLINE_remove = "root=/dev/mmcblk0p2"
 
