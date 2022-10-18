@@ -8,7 +8,9 @@ Please refer to README.hardware for hardware specific information.
 
 Dependencies
 ------------
-This layer depends on the oe-core layer
+This layer depends on :
+- the oe-core layer
+- rauc
 
 Maintenance
 -----------
@@ -23,4 +25,4 @@ bitbake core-image-minimal
 cd <build-dir>/tmp/deploy/images/qemuarma9/
 
 3. call script 
-./qemu-run.sh 
+sudo ./launch-qemu.sh <interface network> 
