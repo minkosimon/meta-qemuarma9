@@ -7,25 +7,25 @@
 # GPL licensed (see end of file) * Use at your own risk!
 #
 # Usage:
-#   qemu-pi.sh 2017-01-11-raspbian-jessie.img # or any other image
-#
-# Notes:
-#   If NO_NETWORK=0 it will include your network interface on a bridge
-#     with the same gateway and routes, and restore it when exiting qemu
-#
-#   If NO_NETWORK=1 (default), that configuration will have to be done manually
-#     in order to obtain network access inside raspbian
-#
-#   It requires a modified kernel image for qemu. (variable $KERNEL)
-#
-#   It enables SSH on the image
-#
-#   For the network bridge configuration, this needs to be in /etc/sudoers
-#      Cmnd_Alias      QEMU=/usr/bin/ip,/usr/bin/modprobe,/usr/bin/brctl
-#      %kvm     ALL=NOPASSWD: QEMU
+#      launch qemu image and create a bridge on host
+#####################################################################################
+function usage 
+{
+  echo "[  INFO ] : script $0 expects interface name as parameter"
+  echo "           i.e $0 enp0s8"
+  exit 1
+}
 
-#[[ -z "$1" ]] && { echo "[ ERROR ] : script $0 no parameters";exit 1;}
+function delete_interface_br0
+{
+  echo "[  INFO ] : delete interface br0 is already exists"
+  sudo ip link delete br0 type bridge
+  
+}
+
 [[ "$EUID" -ne 0 ]] && { echo "[ ERROR ] : Please run as root";exit 1;}
+[[ -z "$1" ]] && { echo "[ ERROR ] : script $0 no parameters";usage; exit 1;}
+
 
 
 NO_NETWORK=0           # set to 1 to skip network configuration
@@ -34,15 +34,15 @@ MAC='52:54:be:36:42:a9' # comment this line for random MAC (maybe annoying if on
 BINARY_PATH=/usr/bin    # path prefix for binaries
 NO_GRAPHIC=0            # set to 1 to start in no graphic mode
 
-#Random MAC adress
-#MAC=$(printf 'DE:AD:BE:EF:%02X:%02X\n' $((RANDOM%256)) $((RANDOM%256)))
 
 # sanity checks
 type qemu-system-arm &>/dev/null || { echo "[ ERROR ] : QEMU ARM not found"       ; exit 1; }
-#test -f $IMG && test -f $KERNEL  || { echo "[ ERROR ] : $IMG or $KERNEL not found"; exit 1; }
 
-IFACE="$( ip r | grep "default via" | awk '{ print $5 }' | head -1 )"
-IFACE="enp0s8"
+
+check_IFACE="$( ip r | grep "default via" | awk '{ print $5 }' | grep $BRIDGE )"
+[[ ! -z $check_IFACE ]] && delete_interface_br0
+
+IFACE="$1"
 [[ "$IFACE" == "" ]] || [[ "$BRIDGE" == "" ]] && NO_NETWORK=1
 
 # some more checks
