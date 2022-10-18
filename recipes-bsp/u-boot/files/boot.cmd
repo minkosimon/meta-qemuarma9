@@ -42,5 +42,5 @@ else \
   saveenv; \
   reset; \
 fi; \
-setenv bootargs console=ttyAMA0 root=/dev/mmcblk0p2;saveenv;ext4load mmc 0:1 0x60100000 kernel_a;ext4load mmc 0:1 0x62000000 dtb_a;bootz 0x60100000 - 0x62000000
+setenv bootargs console=ttyAMA0 root=/dev/mmcblk0p2;saveenv;ext4load mmc 0:1 0x60100000 zImage;ext4load mmc 0:1 0x62000000 vexpress-v2p-ca9.dtb;bootz 0x60100000 - 0x62000000
 
