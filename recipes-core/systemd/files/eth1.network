@@ -1,8 +1,0 @@
-[Match]
-Name=eth1
-
-[Network]
-DHCP=no
-Address=10.0.2.17/24
-Gateway=10.0.2.2
-DNS=10.0.2.3

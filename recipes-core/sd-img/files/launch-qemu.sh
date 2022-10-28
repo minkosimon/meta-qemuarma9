@@ -1,7 +1,12 @@
 #!/bin/bash
 
-# Run a raspbian image in qemu with network access
-# Tested with 2017-01-11-raspbian-jessie.img (and lite)
+#####################################################################################
+
+# Run a yocto image in qemu with network access
+#
+#This script was create by  Ignacio Nunez Hernanz and Minko Simon re-edit it for 
+#Personal use case.
+####################################################################################
 #
 # Copyleft 2017 by Ignacio Nunez Hernanz <nacho _a_t_ ownyourbits _d_o_t_ com>
 # GPL licensed (see end of file) * Use at your own risk!
@@ -11,8 +16,8 @@
 #####################################################################################
 function usage 
 {
-  echo "[  INFO ] : script $0 expects interface name as parameter"
-  echo "           i.e $0 enp0s8"
+  echo "[  INFO ] : This script create a virtual NIC and launch qemu yocto image "
+  echo "            wit valid parameters"
   exit 1
 }
 
@@ -23,8 +28,45 @@ function delete_interface_br0
   
 }
 
+function create_virtual_nic
+{
+  echo "[  INFO ] : Start to create a virtual interface network named : dummy0"
+  sudo modprobe dummy
+  sudo ip link add dummy0 type dummy
+
+  [[ -z $(ip a |grep dummy) ]] && { echo "[ ERROR ] : failed to create virtual network interface";exit 1; }
+  echo "[  INFO ] : Set a mac adress to dummy0 network interface (C8:D7:4A:4E:47:50)"
+  sudo ifconfig dummy0 hw ether C8:D7:4A:4E:47:50 || { echo "[ ERROR ] : Failed to set MAC adress"; exit 1; }
+
+  echo "[  INFO ] : Set a IP adress to dummy0 network interface (10.0.3.100/24)"
+  sudo ip addr add 10.0.3.100/24 brd + dev dummy0 label dummy0:0 
+  #sudo ifconfig dummy0 10.0.3.100/24/24
+
+  echo "[  INFO ] : Set a virtual interface network UP (dummy0)"
+  sudo ifconfig dummy0 up
+
+}
+
+function delete_virtual_nic
+{
+
+  if [[ ! -z $(ip a |grep dummy) ]];then
+    echo "[  INFO ] : delete network interface dummy0"
+    sudo ip addr del 10.0.3.100/24 brd + dev dummy0 label dummy0:0
+    sudo ip link delete dummy0 type dummy
+    sudo rmmod dummy
+    [ ! -z $(ip a |grep dummy) ] && { echo "[ ERROR ] : failed to delete interface dummy0";exit 1; } 
+  else
+    echo "[  INFO ] : network interface dummy0 is already deleted"
+  fi
+
+}
+
 [[ "$EUID" -ne 0 ]] && { echo "[ ERROR ] : Please run as root";exit 1;}
-[[ -z "$1" ]] && { echo "[ ERROR ] : script $0 no parameters";usage; exit 1;}
+#[[ -z "$1" ]] && { echo "[ ERROR ] : script $0 no parameters";usage; exit 1;}
+
+delete_virtual_nic
+create_virtual_nic
 
 
 
@@ -42,7 +84,7 @@ type qemu-system-arm &>/dev/null || { echo "[ ERROR ] : QEMU ARM not found"     
 check_IFACE="$( ip r | grep "default via" | awk '{ print $5 }' | grep $BRIDGE )"
 [[ ! -z $check_IFACE ]] && delete_interface_br0
 
-IFACE="$1"
+IFACE="dummy0"
 [[ "$IFACE" == "" ]] || [[ "$BRIDGE" == "" ]] && NO_NETWORK=1
 
 # some more checks
@@ -114,29 +156,7 @@ EOF
 }
 
 echo "[ INFO ] : NET_ARGS = $NET_ARGS"
-# prepare the image
-#SECTOR1=$( fdisk -l $IMG | grep FAT32 | awk '{ print $2 }' )
-#SECTOR2=$( fdisk -l $IMG | grep Linux | awk '{ print $2 }' )
-#OFFSET1=$(( SECTOR1 * 512 ))
-#OFFSET2=$(( SECTOR2 * 512 ))
 
-# make 'boot' vfat partition available locally
-#mkdir -p tmpmnt
-#mount $IMG -o offset=$OFFSET1 tmpmnt
-#touch tmpmnt/ssh   # this enables ssh
-#umount tmpmnt
-
-# make 'linux' ext4 partition available locally
-#mount $IMG -o offset=$OFFSET2 tmpmnt
-#cat > tmpmnt/etc/udev/rules.d/90-qemu.rules <<EOF
-#KERNEL=="sda", SYMLINK+="mmcblk0"
-#KERNEL=="sda?", SYMLINK+="mmcblk0p%n"
-#KERNEL=="sda2", SYMLINK+="root"
-#EOF
-
-# Work around a known issue with qemu-arm, versatile board and raspbian for at least qemu-arm < 2.8.0
-# This works but modifies the image so it is recommended to upgrade QEMU
-# Ref: http://stackoverflow.com/questions/38837606/emulate-raspberry-pi-raspbian-with-qemu
 
 QEMU_MAJOR=$( qemu-system-arm --version | grep -oP '\d+\.\d+\.\d+' | head -1 | cut -d. -f1 )
 QEMU_MINOR=$( qemu-system-arm --version | grep -oP '\d+\.\d+\.\d+' | head -1 | cut -d. -f2 )
@@ -158,6 +178,8 @@ echo "[ INFO ] : qemu-system-arm -M vexpress-a9 -m 1024 -kernel u-boot.elf -nogr
 # do it
 qemu-system-arm -M vexpress-a9 -m 1024 -kernel u-boot.elf -nographic -sd sd.img $NET_ARGS $PARAMS_QEMU
 
+sleep 2
+
 # restore network to what it was
 [[ "$NO_NETWORK" != "1" ]] && {
   ip link set down dev $TAPIF
@@ -167,6 +189,8 @@ qemu-system-arm -M vexpress-a9 -m 1024 -kernel u-boot.elf -nographic -sd sd.img 
   brctl delbr $BRIDGE
   echo "$ROUTES" | tac | while read l; do ip route add $l; done
 }
+
+delete_virtual_nic
 
 # License
 #

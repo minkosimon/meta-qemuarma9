@@ -1,20 +1,21 @@
 PACKAGECONFIG_append = " networkd resolved"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
-MY_INTERFACE = "eth1"
+MY_INTERFACE = "eth0"
+ID_NUM = "10"
 
 SRC_URI += " \
-    file://${MY_INTERFACE}.network \
-    file://${MY_INTERFACE}.link \
+    file://${ID_NUM}-${MY_INTERFACE}.network \
+    file://${ID_NUM}-${MY_INTERFACE}.link \
 "
 
 FILES_${PN} += " \
-    ${sysconfdir}/systemd/network/${MY_INTERFACE}.network \
-    ${sysconfdir}/systemd/network/${MY_INTERFACE}.link \
+    ${sysconfdir}/systemd/network/${ID_NUM}-${MY_INTERFACE}.network \
+    ${sysconfdir}/systemd/network/${ID_NUM}-${MY_INTERFACE}.link \
 "
 
 do_install_append() {
     install -d ${D}${sysconfdir}/systemd/network
-    install -m 0644 ${WORKDIR}/${MY_INTERFACE}.network ${D}${sysconfdir}/systemd/network
-    install -m 0644 ${WORKDIR}/${MY_INTERFACE}.link ${D}${sysconfdir}/systemd/
+    install -m 0644 ${WORKDIR}/${ID_NUM}-${MY_INTERFACE}.network ${D}${sysconfdir}/systemd/network
+    install -m 0644 ${WORKDIR}/${ID_NUM}-${MY_INTERFACE}.link ${D}${sysconfdir}/systemd/
 }
